@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Matrix Encryption Demo</title>
+    <style>
+      /* Body Styles */
+      body {
+        background-color: black;
+        overflow: hidden;
+        margin: 0;
+        font-family: "Courier New", Courier, monospace; /* Monospace font for Matrix effect */
+      }
+
+      canvas {
+        display: block;
+      }
+
+      /* Base Styles for Container */
+      .container {
+        position: absolute;
+        z-index: 1;
+        width: 90%;
+        max-width: 500px;
+        background: rgba(0, 0, 0, 0.8); /* Semi-transparent black background */
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0, 255, 0, 0.4); /* Green shadow */
+        text-align: center;
+        color: #0f0; /* Matrix green text */
+        transition: transform 0.3s, box-shadow 0.3s; /* Smooth hover effects */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      /* Responsive Adjustments */
+      @media (max-width: 600px) {
+        .container {
+          width: 95%; /* Full width on mobile */
+          padding: 15px;
+        }
+
+        .tab-bar {
+          flex-direction: column; /* Stack buttons on top of each other */
+        }
+
+        .tab-bar button {
+          margin-bottom: 10px; /* Space between buttons */
+          width: 100%; /* Full width for buttons */
+        }
+
+        .section label {
+          font-size: 1rem; /* Ensure labels are readable */
+        }
+
+        .section input {
+          padding: 10px; /* Smaller input padding */
+          font-size: 1rem; /* Ensure inputs are readable */
+        }
+
+        .button {
+          padding: 12px; /* Smaller button padding */
+          font-size: 1rem; /* Ensure buttons are readable */
+        }
+
+        .results {
+          font-size: 1rem; /* Ensure results are readable */
+        }
+
+        .about p {
+          font-size: 0.9rem; /* Smaller font size for about section */
+        }
+      }
+
+      /* Hover Effects */
+      .container:hover {
+        box-shadow: 0 20px 50px rgba(0, 255, 0, 0.6); /* Intensified shadow on hover */
+      }
+
+      /* Tab Buttons */
+      .tab-bar {
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+        gap: 10px;
+      }
+
+      .tab-bar button {
+        flex: 1;
+        padding: 12px;
+        font-size: 1rem;
+        color: #0f0; /* Matrix green */
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid #0f0; /* Matrix green border */
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      /* Button Hover Effects */
+      .tab-bar button:hover {
+        color: #000;
+        background: #0f0;
+        box-shadow: 0 4px 15px rgba(0, 255, 0, 0.5);
+      }
+
+      /* Input Styling */
+      .section label {
+        display: block;
+        font-size: 1rem;
+        margin: 15px 0 5px;
+        color: #0f0; /* Matrix green */
+      }
+
+      .section input {
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+        border-radius: 8px;
+        border: 1px solid #0f0; /* Matrix green border */
+        outline: none;
+        color: #ecf0f1;
+        background: rgba(255, 255, 255, 0.1); /* Dark background for input */
+        transition: border-color 0.3s;
+      }
+
+      .section input:hover {
+        border-color: #00ff00; /* Brighten border on hover */
+      }
+
+      /* Encrypt/Decrypt Button */
+      .button {
+        width: 100%;
+        padding: 14px;
+        margin-top: 20px;
+        background: linear-gradient(135deg, #0f0, #3f3);
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: bold;
+        color: #000;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .button:hover {
+        background: linear-gradient(135deg, #3f3, #0f0);
+        transform: scale(1.05);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Result Styling */
+      .results {
+        font-size: 1rem;
+        margin-top: 15px;
+        color: #ecf0f1;
+      }
+
+      .results span {
+        color: #fff;
+        font-weight: bold;
+      }
+
+      /* About Section */
+      .about {
+        margin: 20px 0;
+        font-size: 1rem;
+        color: #ecf0f1;
+      }
+
+      /* Matrix Animation */
+      #matrixCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1; /* Canvas should be behind other elements */
+      }
+
+      /* Active Tab Indicator */
+      .active-tab {
+        border-bottom: 2px solid #0f0; /* Highlight active tab */
+      }
+
+      /* Animation for Section */
+      .section {
+        opacity: 0;
+        transition: opacity 0.5s ease; /* Fade effect for section display */
+      }
+
+      .section.active {
+        opacity: 1; /* Show active section */
+      }
+
+      .copy-icon {
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="matrixCanvas"></canvas>
+    <div class="container">
+      <h1>Encryption Demo</h1>
+
+      <!-- About Section -->
+      <div class="about">
+        <p>I'm <strong>Muhammadqodir Parpiyev</strong>. Connect with me on:</p>
+        <p>
+          <a
+            href="https://www.linkedin.com/in/muhammadqodir/"
+            target="_blank"
+            style="color: #0f0"
+            >LinkedIn</a
+          >
+          |
+          <a
+            href="https://github.com/parpiyev"
+            target="_blank"
+            style="color: #0f0"
+            >GitHub</a
+          >
+        </p>
+      </div>
+
+      <!-- Tab Buttons -->
+      <div class="tab-bar">
+        <button class="active-tab" onclick="switchTab('caesar')">
+          Caesar Cipher
+        </button>
+        <button onclick="switchTab('vigenere')">Vigenère Cipher</button>
+      </div>
+
+      <!-- Caesar Cipher Section -->
+      <div class="section active" id="caesar">
+        <label for="caesar-input">Full Name (e.g., John Doe)</label>
+        <input
+          type="text"
+          id="caesar-input"
+          placeholder="Enter your full name"
+        />
+        <button class="button" onclick="runCaesarCipher()">
+          Encrypt/Decrypt
+        </button>
+        <div class="results">
+          <p>
+            <strong>Generated Key:</strong> <span id="caesar-key"></span>
+            <span
+              class="caesar-copy-icon caesar-key"
+              onclick="copyToClipboard('caesar-key')"
+            ></span>
+          </p>
+          <p>
+            <strong>Encrypted Text:</strong> <span id="caesar-encrypted"></span>
+            <span
+              class="caesar-copy-icon caesar-encrypted"
+              onclick="copyToClipboard('caesar-encrypted')"
+            ></span>
+          </p>
+          <p>
+            <strong>Decrypted Text:</strong> <span id="caesar-decrypted"></span>
+            <span
+              class="caesar-copy-icon caesar-decrypted"
+              onclick="copyToClipboard('caesar-decrypted')"
+            ></span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Vigenère Cipher Section -->
+      <div class="section" id="vigenere" style="display: none">
+        <label for="vigenere-input">Full Name (e.g., Jane Smith)</label>
+        <input
+          type="text"
+          id="vigenere-input"
+          placeholder="Enter your full name"
+        />
+        <button class="button" onclick="runVigenereCipher()">
+          Encrypt/Decrypt
+        </button>
+        <div class="results">
+          <p>
+            <strong>Generated Key:</strong> <span id="vigenere-key"></span>
+            <span
+              class="vigenere-copy-icon vigenere-key"
+              onclick="copyToClipboard('vigenere-key')"
+            ></span>
+          </p>
+          <p>
+            <strong>Encrypted Text:</strong>
+            <span id="vigenere-encrypted"></span>
+            <span
+              class="vigenere-copy-icon vigenere-encrypted"
+              onclick="copyToClipboard('vigenere-encrypted')"
+            ></span>
+          </p>
+          <p>
+            <strong>Decrypted Text:</strong>
+            <span id="vigenere-decrypted"></span>
+            <span
+              class="vigenere-copy-icon vigenere-decrypted"
+              onclick="copyToClipboard('vigenere-decrypted')"
+            ></span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function copyToClipboard(elementId) {
+        const text = document.getElementById(elementId);
+        navigator.clipboard
+          .writeText(text.innerText)
+          .then(() => {
+            const copyIcon = document.querySelector(`.${elementId}`);
+
+            setTimeout(() => {
+              copyIcon.innerHTML = copied;
+
+              setTimeout(() => {
+                copyIcon.innerHTML = copy;
+              }, 1000);
+            }, 200);
+          })
+          .catch((err) => {
+            console.error("Could not copy text: ", err);
+          });
+      }
+
+      const canvas = document.getElementById("matrixCanvas");
+      const ctx = canvas.getContext("2d");
+
+      // Set canvas size
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const characters =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"; // Added lowercase letters
+      const fontSize = 16;
+      const columns = canvas.width / fontSize;
+
+      // Array to store the y-coordinate of each column
+      const drops = Array(Math.floor(columns)).fill(1);
+
+      function draw() {
+        // Clear the canvas
+        ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; // Fade effect
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "#0F0"; // Green color
+        ctx.font = fontSize + "px monospace";
+
+        for (let i = 0; i < drops.length; i++) {
+          const text = characters.charAt(
+            Math.floor(Math.random() * characters.length)
+          );
+          ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+          // Reset drop position if it falls off the screen
+          if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+
+          drops[i]++;
+        }
+      }
+
+      setInterval(draw, 50); // Redraw every 50 ms
+
+      // Adjust canvas size on window resize
+      window.addEventListener("resize", () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+
+      // Function to switch tabs
+      function switchTab(tab) {
+        const sections = document.querySelectorAll(".section");
+        sections.forEach((section) => {
+          section.classList.remove("active"); // Hide all sections
+          section.style.display = "none"; // Hide all sections
+        });
+        const activeSection = document.getElementById(tab);
+        activeSection.classList.add("active");
+        activeSection.style.display = "block"; // Show selected tab
+        document.querySelectorAll(".tab-bar button").forEach((button) => {
+          button.classList.remove("active-tab"); // Remove active class from all buttons
+        });
+        document
+          .querySelector(`button[onclick="switchTab('${tab}')"]`)
+          .classList.add("active-tab"); // Add active class to the clicked button
+      }
+
+      function runCaesarCipher() {
+        const fullName = document.getElementById("caesar-input").value;
+        const shift = Math.floor(Math.random() * 27); // Default shift for Caesar Cipher
+        const encrypted = caesarEncrypt(fullName, shift);
+        const decrypted = caesarDecrypt(encrypted, shift);
+        document.getElementById("caesar-key").innerText = shift;
+        document.getElementById("caesar-encrypted").innerText = encrypted;
+        document.getElementById("caesar-decrypted").innerText = decrypted;
+
+        const copyIcon = document.querySelectorAll(".caesar-copy-icon");
+        if (copyIcon) {
+          copyIcon.forEach((item) => {
+            item.innerHTML = copy;
+          });
+        }
+      }
+
+      function runVigenereCipher() {
+        const fullName = document.getElementById("vigenere-input").value;
+        const key = generateVigenereKey(fullName);
+        const encrypted = vigenereEncrypt(fullName, key);
+        const decrypted = vigenereDecrypt(encrypted, key);
+        document.getElementById("vigenere-key").innerText = key;
+        document.getElementById("vigenere-encrypted").innerText = encrypted;
+        document.getElementById("vigenere-decrypted").innerText = decrypted;
+
+        const copyIcon = document.querySelectorAll(".vigenere-copy-icon");
+        if (copyIcon) {
+          copyIcon.forEach((item) => {
+            item.innerHTML = copy;
+          });
+        }
+      }
+
+      // Caesar Cipher
+      function caesarEncrypt(fullName, shift = 3) {
+        let encryptedText = "";
+        for (let i = 0; i < fullName.length; i++) {
+          const char = fullName[i];
+          if (char.match(/[a-z]/i)) {
+            const code = fullName.charCodeAt(i);
+            const base = code >= 65 && code <= 90 ? 65 : 97;
+            encryptedText += String.fromCharCode(
+              ((code - base + shift) % 26) + base
+            );
+          } else {
+            encryptedText += char;
+          }
+        }
+        return encryptedText;
+      }
+
+      function caesarDecrypt(encryptedText, shift = 3) {
+        return caesarEncrypt(encryptedText, 26 - shift);
+      }
+
+      // Vigenère Cipher
+      function generateVigenereKey(fullName) {
+        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+          n = fullName.length > 8 ? 8 : fullName.length;
+        let key = "";
+        for (let i = 0; i < n; i++) {
+          key += characters.charAt(
+            Math.floor(Math.random() * characters.length)
+          );
+        }
+
+        return key;
+      }
+
+      function vigenereEncrypt(fullName, key) {
+        let encryptedText = "";
+        for (let i = 0; i < fullName.length; i++) {
+          const fullNameChar = fullName[i];
+          const keyChar = key[i % key.length];
+          const fullNameCharCode = fullNameChar.charCodeAt(0);
+          const keyCharCode = keyChar.charCodeAt(0);
+          if (fullNameChar.match(/[a-z]/i)) {
+            const base = fullNameChar >= "A" && fullNameChar <= "Z" ? 65 : 97;
+            encryptedText += String.fromCharCode(
+              ((fullNameCharCode - base + (keyCharCode % 26)) % 26) + base
+            );
+          } else {
+            encryptedText += fullNameChar;
+          }
+        }
+        return encryptedText;
+      }
+
+      function vigenereDecrypt(encryptedText, key) {
+        let decryptedText = "";
+        for (let i = 0; i < encryptedText.length; i++) {
+          const encryptedChar = encryptedText[i];
+          const keyChar = key[i % key.length];
+          const encryptedCharCode = encryptedChar.charCodeAt(0);
+          const keyCharCode = keyChar.charCodeAt(0);
+          if (encryptedChar.match(/[a-z]/i)) {
+            const base = encryptedChar >= "A" && encryptedChar <= "Z" ? 65 : 97;
+            decryptedText += String.fromCharCode(
+              ((encryptedCharCode - base - (keyCharCode % 26) + 26) % 26) + base
+            );
+          } else {
+            decryptedText += encryptedChar;
+          }
+        }
+        return decryptedText;
+      }
+
+      var copy = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16px" height="16px" viewBox="0 0 48 48" version="1.1">
+
+			<path style="fill:#0f0; stroke:none;" d="M10 9L28 9.00077C31.0943 9.02206 34.3277 8.96353 36.6821 11.3179C39.0365 13.6723 38.9779 16.9057 38.9992 20L39 38C40.9155 37.7841 42.9374 37.735 44.4012 36.2577C46.2541 34.3877 45.9826 31.4158 45.9992 29L46 14C46 11.0897 46.9117 6.05221 44.9722 3.6034C43.5945 1.86383 40.9809 2.0421 38.9992 2.00463L25 2C21.1084 2 13.7588 0.582115 11.179 4.29321C10.1941 5.71012 10.1842 7.36561 10 9M3.6034 12.0278C2.10799 13.2122 2.09572 15.2715 2.01929 17.0046L2 27L2.00463 38.9992C2.03743 40.734 1.8768 42.9434 3.02778 44.3966C4.58326 46.3606 7.79087 45.984 10 45.9992L28 46C30.236 45.9954 33.508 46.468 35.3966 44.9722C36.892 43.7878 36.9043 41.7285 36.9807 39.9954L37 30L36.9954 18.0008C36.9626 16.266 37.1232 14.0566 35.9722 12.6034C34.4167 10.6394 31.2091 11.016 29 11.0008L11 11C8.764 11.0046 5.49198 10.532 3.6034 12.0278z"/>
+			</svg>`;
+      var copied = `<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+						 width="16px" height="16px" viewBox="0 0 512.000000 512.000000"
+						 preserveAspectRatio="xMidYMid meet">
+
+						<g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)"
+						fill="#0f0" stroke="none">
+						<path d="M1853 4826 c-181 -44 -331 -191 -378 -371 -11 -46 -15 -117 -15 -307
+						l0 -248 948 -2 947 -3 76 -27 c180 -64 314 -179 393 -339 78 -159 76 -117 76
+						-1151 l0 -918 248 0 c275 0 320 7 425 62 124 66 227 206 256 346 8 37 11 430
+						11 1285 0 1345 3 1283 -57 1407 -35 72 -151 188 -223 223 -124 60 -61 57
+						-1415 56 -964 -1 -1252 -4 -1292 -13z"/>
+						<path d="M583 3639 c-116 -37 -225 -142 -279 -269 -18 -43 -19 -94 -22 -1365
+						-2 -987 0 -1334 9 -1375 34 -162 160 -292 324 -336 74 -20 2636 -20 2710 0
+						160 42 281 161 320 312 13 54 15 216 13 1390 l-3 1329 -22 55 c-46 111 -142
+						207 -253 253 l-55 22 -1340 2 c-1311 2 -1341 2 -1402 -18z m2071 -1188 c26
+						-27 31 -39 31 -81 l0 -50 -430 -430 c-448 -448 -455 -454 -517 -435 -30 10
+						-464 440 -479 477 -39 95 75 193 169 144 15 -8 99 -87 187 -175 l160 -161 370
+						369 c203 203 377 371 385 375 35 13 93 -3 124 -33z"/>
+						</g>
+						</svg>`;
+    </script>
+  </body>
+</html>
