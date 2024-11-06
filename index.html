@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Matrix Encryption Demo</title>
+    <title>Encryption Demo</title>
     <style>
       /* Body Styles */
       body {
@@ -277,6 +277,12 @@
           id="vigenere-input"
           placeholder="Enter your full name"
         />
+        <label for="vigenere-skey">Secret Key (optional)</label>
+        <input
+          type="text"
+          id="vigenere-skey"
+          placeholder="Enter your secret key"
+        />
         <button class="button" onclick="runVigenereCipher()">
           Encrypt/Decrypt
         </button>
@@ -412,14 +418,18 @@
 
       function runVigenereCipher() {
         const fullName = document.getElementById("vigenere-input").value;
-        const key = generateVigenereKey(fullName);
+        const SecretKey = document.getElementById("vigenere-skey").value;
+        const key = SecretKey
+          ? SecretKey.toLocaleUpperCase()
+          : generateVigenereKey(fullName);
         const encrypted = vigenereEncrypt(fullName, key);
         const decrypted = vigenereDecrypt(encrypted, key);
         document.getElementById("vigenere-key").innerText = key;
         document.getElementById("vigenere-encrypted").innerText = encrypted;
         document.getElementById("vigenere-decrypted").innerText = decrypted;
-
         const copyIcon = document.querySelectorAll(".vigenere-copy-icon");
+        console.log(copyIcon);
+
         if (copyIcon) {
           copyIcon.forEach((item) => {
             item.innerHTML = copy;
